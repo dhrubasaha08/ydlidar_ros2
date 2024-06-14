@@ -8,146 +8,146 @@
 #include <termios.h>
 #include "serial.h"
 
-namespace serial {
+namespace serial
+{
 
-using std::size_t;
-using std::string;
+  using std::size_t;
+  using std::string;
 
+  class MillisecondTimer
+  {
+  public:
+    explicit MillisecondTimer(const uint32_t millis);
+    int64_t remaining();
 
-class MillisecondTimer {
- public:
-  explicit MillisecondTimer(const uint32_t millis);
-  int64_t remaining();
+  private:
+    static timespec timespec_now();
+    timespec expiry;
+  };
 
- private:
-  static timespec timespec_now();
-  timespec expiry;
-};
+  class Serial::SerialImpl
+  {
+  public:
+    explicit SerialImpl(const string &port,
+                        unsigned long baudrate,
+                        bytesize_t bytesize,
+                        parity_t parity,
+                        stopbits_t stopbits,
+                        flowcontrol_t flowcontrol);
 
-class Serial::SerialImpl {
- public:
-  explicit SerialImpl(const string &port,
-                      unsigned long baudrate,
-                      bytesize_t bytesize,
-                      parity_t parity,
-                      stopbits_t stopbits,
-                      flowcontrol_t flowcontrol);
+    virtual ~SerialImpl();
 
-  virtual ~SerialImpl();
+    bool open();
 
-  bool open();
+    void close();
 
-  void close();
+    bool isOpen() const;
 
-  bool isOpen() const;
+    size_t available();
 
-  size_t available();
+    bool waitReadable(uint32_t timeout);
 
-  bool waitReadable(uint32_t timeout);
+    void waitByteTimes(size_t count);
 
-  void waitByteTimes(size_t count);
+    int waitfordata(size_t data_count, uint32_t timeout, size_t *returned_size);
 
-  int waitfordata(size_t data_count, uint32_t timeout, size_t *returned_size);
+    size_t read(uint8_t *buf, size_t size = 1);
 
-  size_t read(uint8_t *buf, size_t size = 1);
+    size_t write(const uint8_t *data, size_t length);
 
-  size_t write(const uint8_t *data, size_t length);
+    void flush();
 
+    void flushInput();
 
-  void flush();
+    void flushOutput();
 
-  void flushInput();
+    void sendBreak(int duration);
 
-  void flushOutput();
+    bool setBreak(bool level);
 
-  void sendBreak(int duration);
+    bool setRTS(bool level);
 
-  bool setBreak(bool level);
+    bool setDTR(bool level);
 
-  bool setRTS(bool level);
+    bool waitForChange();
 
-  bool setDTR(bool level);
+    bool getCTS();
 
-  bool waitForChange();
+    bool getDSR();
 
-  bool getCTS();
+    bool getRI();
 
-  bool getDSR();
+    bool getCD();
 
-  bool getRI();
+    uint32_t getByteTime();
 
-  bool getCD();
+    void setPort(const string &port);
 
-  uint32_t getByteTime();
+    string getPort() const;
 
-  void setPort(const string &port);
+    void setTimeout(Timeout &timeout);
 
-  string getPort() const;
+    Timeout getTimeout() const;
 
-  void setTimeout(Timeout &timeout);
+    bool setBaudrate(unsigned long baudrate);
 
-  Timeout getTimeout() const;
+    bool setStandardBaudRate(speed_t baudrate);
 
-  bool setBaudrate(unsigned long baudrate);
+    bool setCustomBaudRate(unsigned long baudrate);
 
-  bool setStandardBaudRate(speed_t baudrate);
+    unsigned long getBaudrate() const;
 
-  bool setCustomBaudRate(unsigned long baudrate);
+    bool setBytesize(bytesize_t bytesize);
 
-  unsigned long getBaudrate() const;
+    bytesize_t getBytesize() const;
 
-  bool setBytesize(bytesize_t bytesize);
+    bool setParity(parity_t parity);
 
-  bytesize_t getBytesize() const;
+    parity_t getParity() const;
 
-  bool setParity(parity_t parity);
+    bool setStopbits(stopbits_t stopbits);
 
-  parity_t getParity() const;
+    stopbits_t getStopbits() const;
 
-  bool setStopbits(stopbits_t stopbits);
+    bool setFlowcontrol(flowcontrol_t flowcontrol);
 
-  stopbits_t getStopbits() const;
+    flowcontrol_t getFlowcontrol() const;
 
-  bool setFlowcontrol(flowcontrol_t flowcontrol);
+    bool setTermios(const termios *tio);
 
-  flowcontrol_t getFlowcontrol() const;
+    bool getTermios(termios *tio);
 
-  bool setTermios(const termios *tio);
+    int readLock();
 
-  bool getTermios(termios *tio);
+    int readUnlock();
 
-  int readLock();
+    int writeLock();
 
-  int readUnlock();
+    int writeUnlock();
 
-  int writeLock();
+  private:
+    string port_; // Path to the file descriptor
+    int fd_;      // The current file descriptor
+    pid_t pid;
 
-  int writeUnlock();
+    bool is_open_;
+    bool xonxoff_;
+    bool rtscts_;
 
+    Timeout timeout_;        // Timeout for read operations
+    unsigned long baudrate_; // Baudrate
+    uint32_t byte_time_ns_;  // Nanoseconds to transmit/receive a single byte
 
- private:
-  string port_;               // Path to the file descriptor
-  int fd_;                    // The current file descriptor
-  pid_t pid;
+    parity_t parity_;           // Parity
+    bytesize_t bytesize_;       // Size of the bytes
+    stopbits_t stopbits_;       // Stop Bits
+    flowcontrol_t flowcontrol_; // Flow Control
 
-  bool is_open_;
-  bool xonxoff_;
-  bool rtscts_;
-
-  Timeout timeout_;           // Timeout for read operations
-  unsigned long baudrate_;    // Baudrate
-  uint32_t byte_time_ns_;     // Nanoseconds to transmit/receive a single byte
-
-  parity_t parity_;           // Parity
-  bytesize_t bytesize_;       // Size of the bytes
-  stopbits_t stopbits_;       // Stop Bits
-  flowcontrol_t flowcontrol_; // Flow Control
-
-  // Mutex used to lock the read functions
-  pthread_mutex_t read_mutex;
-  // Mutex used to lock the write functions
-  pthread_mutex_t write_mutex;
-};
+    // Mutex used to lock the read functions
+    pthread_mutex_t read_mutex;
+    // Mutex used to lock the write functions
+    pthread_mutex_t write_mutex;
+  };
 
 }
 
