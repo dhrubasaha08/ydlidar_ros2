@@ -41,7 +41,10 @@ std::vector<float> split(const std::string &s, char delim) {
 }
 
 bool fileExists(const std::string filename) {
-  return access(filename.c_str(), 0) == 0;
+  struct stat info;
+  memset(&info, 0, sizeof(info)); // Initialize the structure properly
+  int ret = stat(filename.c_str(), &info);
+  return (ret == 0);
 }
 
 int main(int argc, char *argv[]) {
@@ -155,7 +158,8 @@ int main(int argc, char *argv[]) {
   laser.setLidarType(m_isToFLidar ? TYPE_TOF : TYPE_TRIANGLE);
   laser.setIgnoreArray(ignore_array);
 
-  printf("[YDLIDAR INFO] Current ROS Driver Version: %s\n", ROS2Verision.c_str());
+  printf("[YDLIDAR INFO] Current ROS Driver Version: %s\n", ROS2Verision);
+
   bool ret = laser.initialize();
   if (ret) {
     ret = laser.turnOn();
@@ -213,4 +217,3 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
-
