@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
   auto node = rclcpp::Node::make_shared("ydlidar_node");
 
   std::string port = "/dev/ttyUSB0";
-  int baudrate = 230400;
+  int baudrate = 128000;
   std::string frame_id = "laser_frame";
   bool reversion = true;
   bool resolution_fixed = true;

@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  int baudrate = 230400;
+  int baudrate = 128000
   std::map<int, int> baudrateList;
   baudrateList[0] = 115200;
   baudrateList[1] = 128000;
