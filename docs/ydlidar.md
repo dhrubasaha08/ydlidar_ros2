@@ -3,14 +3,11 @@
 #### Linux/OS X
 	mkdir -p ~/ydlidar_ros2_ws/src
 	cd ~/ydlidar_ros2_ws/src
-#### Windows
-	md \dev\ydlidar_ros2_ws\src
-	cd \dev\ydlidar_ros2_ws\src
 	
 ## Step2: clone ydlidar ros2 package
  	git clone https://github.com/dhrubasaha08/ydlidar_ros2
 	
-## Step3: Build [ydlidar_ros2](https://github.com/YDLIDAR/ydlidar_ros2) package
+## Step3: Build [ydlidar_ros2](https://github.com/dhrubasaha08/ydlidar_ros2) package
 	cd ..
 	colcon build --symlink-install
 Note: install colcon [see](https://index.ros.org/doc/ros2/Tutorials/Colcon-Tutorial/#install-colcon)
