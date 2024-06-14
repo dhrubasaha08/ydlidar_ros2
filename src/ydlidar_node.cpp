@@ -30,24 +30,28 @@
 
 using namespace ydlidar;
 
-std::vector<float> split(const std::string &s, char delim) {
+std::vector<float> split(const std::string &s, char delim)
+{
   std::vector<float> elems;
   std::stringstream ss(s);
   std::string number;
-  while (std::getline(ss, number, delim)) {
+  while (std::getline(ss, number, delim))
+  {
     elems.push_back(std::stof(number));
   }
   return elems;
 }
 
-bool fileExists(const std::string filename) {
+bool fileExists(const std::string filename)
+{
   struct stat info;
   memset(&info, 0, sizeof(info)); // Initialize the structure properly
   int ret = stat(filename.c_str(), &info);
   return (ret == 0);
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
   rclcpp::init(argc, argv);
 
   auto node = rclcpp::Node::make_shared("ydlidar_node");
@@ -116,27 +120,33 @@ int main(int argc, char *argv[]) {
 
   std::vector<float> ignore_array = split(list, ',');
 
-  if (ignore_array.size() % 2) {
+  if (ignore_array.size() % 2)
+  {
     RCLCPP_ERROR(node->get_logger(), "ignore array is odd, needs to be even");
   }
 
-  for (uint16_t i = 0; i < ignore_array.size(); i++) {
-    if (ignore_array[i] < -180.0 || ignore_array[i] > 180.0) {
+  for (uint16_t i = 0; i < ignore_array.size(); i++)
+  {
+    if (ignore_array[i] < -180.0 || ignore_array[i] > 180.0)
+    {
       RCLCPP_ERROR(node->get_logger(), "ignore array should be between -180 and 180");
     }
   }
 
   CYdLidar laser;
 
-  if (frequency < 3) {
+  if (frequency < 3)
+  {
     frequency = 7.0;
   }
 
-  if (frequency > 16) {
+  if (frequency > 16)
+  {
     frequency = 16;
   }
 
-  if (angle_max < angle_min) {
+  if (angle_max < angle_min)
+  {
     double temp = angle_max;
     angle_max = angle_min;
     angle_min = temp;
@@ -161,7 +171,8 @@ int main(int argc, char *argv[]) {
   printf("[YDLIDAR INFO] Current ROS Driver Version: %s\n", ROS2Verision);
 
   bool ret = laser.initialize();
-  if (ret) {
+  if (ret)
+  {
     ret = laser.turnOn();
   }
 
@@ -169,11 +180,13 @@ int main(int argc, char *argv[]) {
 
   rclcpp::WallRate loop_rate(20);
 
-  while (ret && rclcpp::ok()) {
+  while (ret && rclcpp::ok())
+  {
     bool hardError;
     LaserScan scan;
 
-    if (laser.doProcessSimple(scan, hardError)) {
+    if (laser.doProcessSimple(scan, hardError))
+    {
       auto scan_msg = std::make_shared<sensor_msgs::msg::LaserScan>();
 
       scan_msg->header.stamp.sec = RCL_NS_TO_S(scan.stamp);
@@ -190,19 +203,24 @@ int main(int argc, char *argv[]) {
       int size = (scan.config.max_angle - scan.config.min_angle) / scan.config.angle_increment + 1;
       scan_msg->ranges.resize(size);
       scan_msg->intensities.resize(size);
-      for (size_t i = 0; i < scan.points.size(); i++) {
+      for (size_t i = 0; i < scan.points.size(); i++)
+      {
         int index = std::ceil((scan.points[i].angle - scan.config.min_angle) / scan.config.angle_increment);
-        if (index >= 0 && index < size) {
+        if (index >= 0 && index < size)
+        {
           scan_msg->ranges[index] = scan.points[i].range;
           scan_msg->intensities[index] = scan.points[i].intensity;
         }
       }
 
       laser_pub->publish(*scan_msg);
-    } else {
+    }
+    else
+    {
       RCLCPP_ERROR(node->get_logger(), "Failed to get scan");
     }
-    if (!rclcpp::ok()) {
+    if (!rclcpp::ok())
+    {
       break;
     }
     rclcpp::spin_some(node);
