@@ -22,7 +22,7 @@
 #define UNUSED(x) (void)x
 
 #if !defined(_MSC_VER)
-#	define _access access
+#       define _access access
 #endif
 
 #if defined(_WIN32) && !defined(__MINGW32__)
@@ -45,7 +45,6 @@ typedef unsigned __int64 uint64_t;
 #ifndef __GNUC__
 #define __attribute__(x)
 #endif
-
 
 #ifdef _AVR_
 typedef uint8_t        _size_t;
@@ -82,17 +81,14 @@ enum {
   DEVICE_DRIVER_TYPE_TCP = 0x1,
 };
 
-
 #define IS_OK(x)    ( (x) == RESULT_OK )
 #define IS_TIMEOUT(x)  ( (x) == RESULT_TIMEOUT )
 #define IS_FAIL(x)  ( (x) == RESULT_FAIL )
-
 
 // Determine if sigaction is available
 #if __APPLE__ || _POSIX_C_SOURCE >= 1 || _XOPEN_SOURCE || _POSIX_SOURCE
 #define HAS_SIGACTION
 #endif
-
 
 static volatile sig_atomic_t g_signal_status = 0;
 
@@ -134,7 +130,6 @@ set_signal_handler(int signal_value, signal_handler_t signal_handler)
       strncpy(error_string, msg, error_length);
       msg[error_length - 1] = '\0';
     }
-
 #else
     int error_status = strerror_r(errno, error_string, error_length);
 
@@ -142,7 +137,6 @@ set_signal_handler(int signal_value, signal_handler_t signal_handler)
       throw std::runtime_error("Failed to get error string for errno: " +
                                std::to_string(errno));
     }
-
 #endif
 #else
     strerror_s(error_string, error_length, errno);
@@ -177,7 +171,6 @@ signal_handler(int signal_value)
   printf("signal_handler(%d)\n", signal_value);
 
 #ifdef HAS_SIGACTION
-
   if (old_action.sa_flags & SA_SIGINFO) {
     if (old_action.sa_sigaction != NULL) {
       old_action.sa_sigaction(signal_value, siginfo, context);
@@ -190,13 +183,10 @@ signal_handler(int signal_value)
       old_action.sa_handler(signal_value);
     }
   }
-
 #else
-
   if (old_signal_handler) {
     old_signal_handler(signal_value);
   }
-
 #endif
 
   trigger_interrupt_guard_condition(signal_value);
@@ -215,7 +205,6 @@ inline void init(int argc, char *argv[]) {
   action.sa_flags = SA_SIGINFO;
   ::old_action = set_sigaction(SIGINT, action);
   set_sigaction(SIGTERM, action);
-
 #else
   ::old_signal_handler = set_signal_handler(SIGINT, ::signal_handler);
   // Register an on_shutdown hook to restore the old signal handler.
@@ -228,24 +217,18 @@ inline void shutdownNow() {
   trigger_interrupt_guard_condition(SIGINT);
 }
 
-//inline bool fileExists(const std::string filename) {
-//    return 0 == _access(filename.c_str(), 0x00 ); // 0x00 = Check for existence only!
-//}
-
 inline bool fileExists(const std::string filename) {
 #ifdef _WIN32
   struct _stat info = {0};
   int ret = _stat(filename.c_str(), &info);
 #else
-  struct stat info = {0};
+  struct stat info;
+  memset(&info, 0, sizeof(info)); // Initialize the structure properly
   int ret = stat(filename.c_str(), &info);
 #endif
   return (ret == 0);
-  /*return 0 == _access(filename.c_str(), 0x00 ); // 0x00 = Check for existence only!*/
 }
 
-
-}// namespace ydlidar
-
+} // namespace ydlidar
 
 #endif  // V8STDINT_H_
